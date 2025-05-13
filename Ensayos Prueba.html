@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Formulario de Verdadero o Falso</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        background-color: #f9f9f9;
+      }
+      h2 {
+        padding: 20px;
+        margin: 0;
+        background-color: #444;
+        color: white;
+        text-align: center;
+        font-size: 2.5em;
+      }
+      .desktop-view {
+        display: none;
+      }
+      .correct-text {
+        background-color: #ffffe0;
+      }
+      .correct {
+        background-color: #c8e6c9;
+      }
+      .incorrect {
+        background-color: #ffcdd2;
+      }
+      .hidden {
+        display: none;
+      }
+      .explicacion {
+        background-color: #eeeeee;
+        padding: 20px;
+        margin-top: 10px;
+        border-radius: 8px;
+        font-size: 1.4em;
+      }
+      .mobile-view {
+        display: block;
+        padding: 40px 20px;
+      }
+      .mobile-question {
+        display: none;
+        padding: 30px 0;
+      }
+      .mobile-question.active {
+        display: block;
+      }
+      .mobile-question p {
+        font-size: 2.5em;
+        line-height: 1.6em;
+        margin-bottom: 30px;
+      }
+      label {
+        display: block;
+        font-size: 2.2em;
+        padding: 25px;
+        margin: 20px 0;
+        text-align: center;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      label input {
+        display: none;
+      }
+      label.true-option {
+        background-color: #4caf50;
+        color: white;
+      }
+      label.false-option {
+        background-color: #f44336;
+        color: white;
+      }
+      label input:checked + span {
+        font-weight: bold;
+        text-decoration: underline;
+      }
+      .controls,
+      .extra-buttons {
+        margin-top: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+      }
+      .controls button,
+      .extra-buttons button,
+      button[type="button"] {
+        padding: 25px;
+        font-size: 1.8em;
+        width: 100%;
+        max-width: 400px;
+        border: none;
+        border-radius: 10px;
+        background-color: #555;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      .controls button:hover,
+      .extra-buttons button:hover,
+      button[type="button"]:hover {
+        background-color: #222;
+      }
+      .active-action {
+        background-color: #ff9800 !important;
+      }
+      #resultadoMobile {
+        margin-top: 40px;
+        font-size: 1.6em;
+      }
+      .respuesta-correcta {
+        background-color: #f0f0f0;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 10px;
+      }
+      .respuesta-correcta p {
+        margin: 10px 0;
+      }
+      button.finish {
+        position: relative;
+        padding: 20px 40px;
+        font-size: 40px;
+        color: white;
+        background: linear-gradient(
+          270deg,
+          red,
+          orange,
+          yellow,
+          green,
+          cyan,
+          blue,
+          violet,
+          red
+        );
+        background-size: 800% 800%;
+        animation: rainbowBackground 6s ease infinite;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+        border-radius: 10px;
+        cursor: pointer;
+        overflow: hidden;
+        transition: transform 0.2s ease;
+        border: none;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7); /* mejora contraste */
+      }
+
+      @keyframes rainbowBackground {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      button.finish:active {
+        transform: scale(0.95);
+      }
+
+      /* Animación de clic hacia adentro */
+      .finish:active {
+        transform: scale(0.95);
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Formulario: ¿Verdadero o Falso?</h2>
+    <div class="mobile-view">
+      <form id="vfFormMobile">
+        <div id="mobileQuestionsContainer"></div>
+        <div class="controls">
+          <button type="button" onclick="cambiarPregunta(-1)">Anterior</button>
+          <button type="button" onclick="cambiarPregunta(1)">Siguiente</button>
+          <button
+            type="button"
+            onclick="revisarFormularioMobile()"
+            class="finish"
+          >
+            Revisar
+          </button>
+        </div>
+        <div class="extra-buttons">
+          <button
+            type="button"
+            id="btnCorrectos"
+            onclick="marcarCorrectosMobile(this)"
+          >
+            Saber correctos
+          </button>
+          <button
+            type="button"
+            id="btnAleatorio"
+            onclick="respuestasAleatoriasMobile(this)"
+          >
+            Aleatorio
+          </button>
+        </div>
+        <div id="resultadoMobile"></div>
+      </form>
+    </div>
+    <script>
+          const preguntas = [
+            {
+              texto:
+                "1. Con uno de los ensayos no destructivos se puede verificar la continuidad de un material.",
+              respuesta: "V",
+              explicacion:
+                "Los ensayos no destructivos permiten identificar discontinuidades sin dañar el material.",
+            },
+            {
+              texto:
+                "2. El ultrasonido tiene en cuenta la viscosidad del material.",
+              respuesta: "F",
+              explicacion:
+                "La viscosidad no afecta directamente el ultrasonido, lo que importa es la densidad y la impedancia acústica.",
+            },
+            {
+              texto:
+                "3. El equipo de ultrasonido tiene un osciloscopio incorporado.",
+              respuesta: "V",
+              explicacion:
+                "El osciloscopio es parte del equipo para visualizar la señal reflejada.",
+            },
+            {
+              texto:
+                "4. El ultrasonido no tiene en cuenta las vibraciones producidas por la corriente eléctrica.",
+              respuesta: "F",
+              explicacion:
+                "El ultrasonido genera y analiza vibraciones mecánicas, no eléctricas.",
+            },
+            {
+              texto:
+                "5. Los ensayos por partículas magnéticas se usan sólo en materiales ferrosos.",
+              respuesta: "V",
+              explicacion:
+                "Este tipo de ensayo solo funciona en materiales que pueden ser magnetizados.",
+            },
+            {
+              texto:
+                "6. Los defectos a poca profundidad con partículas magnéticas pueden detectarse dependiendo del tamaño del defecto.",
+              respuesta: "V",
+              explicacion:
+                "La detección depende de la forma, tamaño y orientación del defecto respecto al campo magnético.",
+            },
+            {
+              texto:
+                "7. Los ensayos por radiografía no detectan discontinuidades macroscópicas.",
+              respuesta: "F",
+              explicacion:
+                "Sí las detectan, especialmente cambios de densidad grandes como grietas o poros.",
+            },
+            {
+              texto: "8. El color blanco en una placa indica la presencia de una fisura.",
+              respuesta: "F",
+              explicacion: "En radiografía industrial, las fisuras permiten mayor paso de radiación, por lo que aparecen como zonas oscuras (no blancas) en la imagen.",
+            },
+            {
+              texto:
+                "9. El ensayo de tracción mide la resistencia de un material a una fuerza estática o aplicada.",
+              respuesta: "V",
+              explicacion:
+                "Es una prueba mecánica que determina el límite de resistencia de un material al ser estirado.",
+            },
+            {
+              texto:
+                "10. El ensayo de compresión se utiliza frecuentemente en materiales de hormigón.",
+              respuesta: "V",
+              explicacion:
+                "El hormigón resiste mejor la compresión que la tracción.",
+            },
+            {
+              texto:
+                "11. El ensayo de líquidos penetrantes se usa para revelar fisuras, no placas radiográficas.",
+              respuesta: "V",
+              explicacion:
+                "Los líquidos penetrantes son útiles para detectar fisuras abiertas en la superficie.",
+            },
+            {
+              texto:
+                "12. El fenómeno capilar está relacionado con la longitud de la grieta.",
+              respuesta: "V",
+              explicacion:
+                "El líquido se introduce en las grietas por acción capilar, por lo tanto la longitud influye.",
+            },
+            {
+              texto: "13. El ultrasonido utiliza la impedancia acústica.",
+              respuesta: "V",
+              explicacion:
+                "La impedancia determina cómo se refleja la onda en los diferentes materiales.",
+            },
+            {
+              texto: "14. El ensayo de líquidos penetrantes no se usa en materiales vidriados, sino en aceros y metales.",
+              respuesta: "F",
+              explicacion: "El ensayo puede aplicarse a materiales vidriados, metálicos, cerámicos y plásticos, siempre que no sean porosos.",
+            },
+            {
+              texto:
+                "15. El polvo usado en la inspección por partículas magnéticas debe poder entrar en las fisuras.",
+              respuesta: "V",
+              explicacion:
+                "El polvo se acumula en las zonas donde hay fugas de campo magnético, como fisuras.",
+            },
+            {
+              texto:
+                "16. Las líneas de campo magnético en un ensayo de partículas magnéticas no deben ser paralelas a las fisuras.",
+              respuesta: "V",
+              explicacion:
+                "Si el campo es paralelo, no hay interrupción que revele el defecto.",
+            },
+            {
+              texto:
+                "17. El líquido penetrante debe tener baja tensión superficial.",
+              respuesta: "V",
+              explicacion: "Para que pueda ingresar fácilmente en grietas finas.",
+            },
+            {
+              texto: "18. El líquido penetrante se debe evaporar rápidamente para poder ver la fisura.",
+              respuesta: "F",
+              explicacion: "El líquido no debe evaporarse rápidamente, ya que necesita tiempo suficiente para penetrar en las discontinuidades antes del revelado.",
+            },
+            {
+              texto:
+                "19. Los ensayos no destructivos no implican un daño técnico importante o nulo.",
+              respuesta: "V",
+              explicacion:
+                "Su objetivo es preservar el componente mientras se evalúa su estado.",
+            },
+            {
+              texto:
+                "20. Los ensayos no destructivos proveen datos menos exactos que los destructivos.",
+              respuesta: "F",
+              explicacion:
+                "Pueden ser igual de precisos, solo que se usan con otro propósito (sin dañar el material).",
+            },
+          ];
+          const containerMobile = document.getElementById(
+            "mobileQuestionsContainer"
+          );
+          let current = 0;
+
+          let estadoBotones = {
+            correctos: false,
+            aleatorio: false,
+          };
+
+          preguntas.forEach((pregunta, index) => {
+            const div = document.createElement("div");
+            div.className = "mobile-question";
+            div.id = `mobileQ${index}`;
+            div.innerHTML = `
+          <p><strong>${pregunta.texto}</strong></p>
+          <label class="true-option">
+            <input type="radio" name="mq${index}" value="V" onchange="limpiarResaltado()">
+            <span>Verdadero</span>
+          </label>
+          <label class="false-option">
+            <input type="radio" name="mq${index}" value="F" onchange="limpiarResaltado()">
+            <span>Falso</span>
+          </label>
+          <div class="explicacion hidden" id="mexp${index}">${pregunta.explicacion}</div>
+        `;
+            containerMobile.appendChild(div);
+          });
+
+          function mostrarPreguntaMobile(index) {
+            document
+              .querySelectorAll(".mobile-question")
+              .forEach((q) => q.classList.remove("active"));
+            document.getElementById(`mobileQ${index}`).classList.add("active");
+          }
+
+          function cambiarPregunta(delta) {
+            if (current + delta >= 0 && current + delta < preguntas.length) {
+              current += delta;
+              mostrarPreguntaMobile(current);
+            }
+          }
+
+          function revisarFormularioMobile() {
+            const form = document.forms["vfFormMobile"];
+            let correctas = 0;
+            let incorrectas = 0;
+            let completos = true;
+            let resultadoHTML = "<h3>Resultados:</h3>";
+
+            preguntas.forEach((pregunta, i) => {
+              const seleccion = form[`mq${i}`].value;
+              if (!seleccion) completos = false;
+            });
+
+            if (!completos)
+              return alert("Responde todas las preguntas antes de revisar.");
+
+            preguntas.forEach((pregunta, i) => {
+              const seleccion = form[`mq${i}`].value;
+              const expl = document.getElementById(`mexp${i}`);
+              expl.classList.remove("hidden");
+              if (seleccion === pregunta.respuesta) {
+                correctas++;
+              } else {
+                incorrectas++;
+                resultadoHTML += `
+            <div class='respuesta-correcta'>
+              <strong>${pregunta.texto}</strong><br>
+              <p>Tu respuesta: <strong style="color:#d32f2f;">${
+                seleccion === "V" ? "Verdadero" : "Falso"
+              }</strong></p>
+              <p>Respuesta correcta: <strong class="${
+                pregunta.respuesta === "V" ? "correct" : "incorrect"
+              }">${pregunta.respuesta === "V" ? "Verdadero" : "Falso"}</strong></p>
+              <em class="correct-text">${pregunta.explicacion}</em>
+            </div>
+          `;
+              }
+            });
+
+            document.getElementById("resultadoMobile").innerHTML = resultadoHTML;
+            alert(
+              `Resultado: ${correctas} correctas y ${incorrectas} incorrectas.`
+            );
+            limpiarResaltado(true);
+          }
+
+          function marcarCorrectosMobile(btn) {
+            const form = document.forms["vfFormMobile"];
+            preguntas.forEach((pregunta, i) => {
+              const radios = form[`mq${i}`];
+              [...radios].forEach(
+                (r) => (r.checked = r.value === pregunta.respuesta)
+              );
+            });
+            estadoBotones.correctos = !estadoBotones.correctos;
+            actualizarBotonEstado("btnCorrectos", estadoBotones.correctos);
+            estadoBotones.aleatorio = false;
+            actualizarBotonEstado("btnAleatorio", false);
+          }
+
+          function respuestasAleatoriasMobile(btn) {
+            const form = document.forms["vfFormMobile"];
+            preguntas.forEach((pregunta, i) => {
+              const aleatoria = Math.random() < 0.5 ? "V" : "F";
+              const radios = form[`mq${i}`];
+              [...radios].forEach((r) => (r.checked = r.value === aleatoria));
+            });
+            estadoBotones.aleatorio = !estadoBotones.aleatorio;
+            actualizarBotonEstado("btnAleatorio", estadoBotones.aleatorio);
+            estadoBotones.correctos = false;
+            actualizarBotonEstado("btnCorrectos", false);
+          }
+
+          function limpiarResaltado(forzar = false) {
+            if (forzar || estadoBotones.correctos || estadoBotones.aleatorio) {
+              estadoBotones.correctos = false;
+              estadoBotones.aleatorio = false;
+              actualizarBotonEstado("btnCorrectos", false);
+              actualizarBotonEstado("btnAleatorio", false);
+            }
+          }
+
+          function actualizarBotonEstado(id, activo) {
+            const btn = document.getElementById(id);
+            if (activo) {
+              btn.classList.add("active-action");
+            } else {
+              btn.classList.remove("active-action");
+            }
+          }
+
+          mostrarPreguntaMobile(current);
+    </script>
+  </body>
+</html>
